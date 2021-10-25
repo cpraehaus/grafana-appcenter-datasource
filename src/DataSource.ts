@@ -472,7 +472,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       errorType: errorType,
     };
 
-    return await this.invokeForAllApps(url, params, 'errors').then((data) => {
+    return await this.invokeForAllApps(url, params, 'errors', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
