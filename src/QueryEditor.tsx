@@ -30,7 +30,7 @@ export class QueryEditor extends PureComponent<Props> {
   render() {
     const query = defaults(this.props.query, defaultQuery);
     const { type, limit } = query;
-    const dataTypes = queryTypes.map(type => ({
+    const dataTypes = queryTypes.map((type) => ({
       label: type,
       value: type,
     }));

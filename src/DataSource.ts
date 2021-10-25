@@ -36,7 +36,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     this.start = options.range.from.toDate();
     this.end = options.range.to.toDate();
 
-    const promises = options.targets.map(query => {
+    const promises = options.targets.map((query) => {
       this.timezone = options.timezone;
 
       switch (query.type.value) {
@@ -61,7 +61,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       throw new Error("A 'Query type' must be selected.");
     });
 
-    return Promise.all(promises).then(data => ({ data }));
+    return Promise.all(promises).then((data) => ({ data }));
   }
 
   async listOrgs(query: MyQuery) {
@@ -69,7 +69,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     var result: Array<Promise<any>> = [];
 
     // Executes ws for all apps and stores promises into result
-    const promise = this.doRequest(url, {}).then(response => {
+    const promise = this.doRequest(url, {}).then((response) => {
       return response.data;
     });
 
@@ -106,7 +106,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     var result: Array<Promise<any>> = [];
 
     // Executes ws for all apps and stores promises into result
-    const promise = this.doRequest(url, {}).then(response => {
+    const promise = this.doRequest(url, {}).then((response) => {
       return response.data;
     });
 
@@ -157,7 +157,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     }
 
     // Get ErrorGroupIds for the entire period.
-    await this.invokeForAllApps(url, params, 'errorGroups').then(errorGroups => {
+    await this.invokeForAllApps(url, params, 'errorGroups').then((errorGroups) => {
       // Add version to results
       result[errorGroups.appVersion] = [];
 
@@ -171,7 +171,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           .replace('{app_name}', errorGroup.appName)
           .replace('{error_group_id}', errorGroup.errorGroupId);
 
-        const promise = this.doRequest(url, params).then(response => {
+        const promise = this.doRequest(url, params).then((response) => {
           response.data.errors = response.data.errors.map((data: any) => {
             data['appVersion'] = errorGroup.appVersion;
             return data;
@@ -187,7 +187,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
     return Promise.all(promises)
       .then(
-        function(rootElement: any, data: any[]) {
+        function (rootElement: any, data: any[]) {
           // Step 1 - Merged all apps results into a single list
           let errors: any = [];
           for (let index = 0; index < data.length; index++) {
@@ -198,10 +198,10 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
         }.bind(null, rootElement)
       )
       .then(
-        function(timezone: any, data: any[]) {
+        function (timezone: any, data: any[]) {
           // Step 2 - Interate over all errors and count errors by version and day
           let groupedData: any = {};
-          data.forEach(error => {
+          data.forEach((error) => {
             const occurrencyDay = removeTime(new Date(error.timestamp), timezone).getTime();
 
             // Add version to results
@@ -212,7 +212,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           return groupedData;
         }.bind(null, this.timezone)
       )
-      .then(function(data: any[]) {
+      .then(function (data: any[]) {
         // Step 3 - Add to results
         for (const key in data) {
           let version = data[key];
@@ -229,7 +229,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
         return data;
       })
-      .then(function(data: any[]) {
+      .then(function (data: any[]) {
         // Step 4 - Create frame
         const timeKey = 'time';
         versions.add(timeKey);
@@ -237,7 +237,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
         let frame = new MutableDataFrame({
           refId: query.refId,
-          fields: [...versions].map(key => {
+          fields: [...versions].map((key) => {
             return {
               type: key === timeKey ? FieldType.time : FieldType.number,
               name: key,
@@ -286,7 +286,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       top: query.limit,
     };
 
-    return await this.invokeForAllApps(url, params, 'errorGroups').then(data => {
+    return await this.invokeForAllApps(url, params, 'errorGroups').then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -332,7 +332,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       end: this.end.toISOString(),
     };
 
-    return await this.invokeForAllApps(url, params, 'errors').then(data => {
+    return await this.invokeForAllApps(url, params, 'errors').then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -374,7 +374,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       top: query.limit,
     };
 
-    return await this.invokeForAllApps(url, params, 'events').then(data => {
+    return await this.invokeForAllApps(url, params, 'events').then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -411,7 +411,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     const eventName = this.getVariable('eventName');
     const url = `${this.baseUrl}` + `/v0.1/apps/{owner_name}/{app_name}/analytics/events/${eventName}/properties`;
 
-    return await this.invokeForAllApps(url, {}, 'event_properties').then(data => {
+    return await this.invokeForAllApps(url, {}, 'event_properties').then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [{ name: 'Name', type: FieldType.string }],
@@ -436,7 +436,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       end: this.end.toISOString(),
     };
 
-    return await this.invokeForAllApps(url, params, 'values').then(data => {
+    return await this.invokeForAllApps(url, params, 'values').then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -478,10 +478,10 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     var result: Array<Promise<any>> = [];
 
     // Executes ws for all apps and stores promises into result
-    this.appName.split(';').forEach(async appName => {
+    this.appName.split(';').forEach(async (appName) => {
       const url = configuredUrl.replace('{owner_name}', this.orgName).replace('{app_name}', appName);
 
-      const promise = this.doRequest(url, requestParameters).then(response => {
+      const promise = this.doRequest(url, requestParameters).then((response) => {
         //Set app name to data
         response.data[rootElement].map((element: any) => {
           if (typeof element === 'object') {
@@ -497,7 +497,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
     return Promise.all(result)
       .then(
-        function(rootElement: any, data: any[]) {
+        function (rootElement: any, data: any[]) {
           //Merge results of all apps
           let result: any = [];
           for (let index = 0; index < data.length; index++) {
@@ -536,7 +536,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       } else {
         console.log(`Failed on last attempt`);
         console.log(url);
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           resolve({});
         });
       }
@@ -567,13 +567,13 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     const url = `${this.baseUrl}` + `/v0.1/orgs`;
 
     return await this.doRequest(url, {})
-      .then(response => {
+      .then((response) => {
         return {
           status: 'success',
           message: 'Success',
         };
       })
-      .catch(error => {
+      .catch((error) => {
         return {
           status: 'error',
           message: `Could not connect to App Center using the informed parameter. URL: ${url}`,
