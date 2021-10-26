@@ -9,6 +9,7 @@ export const TYPES = [
   'Events',
   'Event properties',
   'Event property count',
+  'Sessions per day',
 ];
 
 export interface MyQuery extends DataQuery {

@@ -56,6 +56,8 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           return this.listEventProperties(query);
         case 'Event property count':
           return this.listEventPropertyCounts(query);
+        case 'Sessions per day':
+          return this.listSessionsPerDay(query);
       }
 
       throw new Error("A 'Query type' must be selected.");
@@ -459,10 +461,37 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     });
   }
 
+  async listSessionsPerDay(query: MyQuery) {
+    const url = `${this.baseUrl}` + `/v0.1/apps/{owner_name}/{app_name}/analytics/session_counts`;
+    const params = {
+      start: this.start.toISOString(),
+      end: this.end.toISOString(),
+      interval: 'P1D',
+    };
+
+    return await this.invokeForAllApps(url, params).then((data) => {
+      const frame = new MutableDataFrame({
+        refId: query.refId,
+        fields: [
+          { name: 'Date', type: FieldType.time },
+          { name: 'Session Count', type: FieldType.number },
+        ],
+      });
+
+      if (data) {
+        data.forEach((object: any) => {
+          frame.appendRow([new Date(object.datetime).getTime(), object.count]);
+        });
+      }
+
+      return frame;
+    });
+  }
+
   /*
     Invokes an API for all apps configured and returns an list with merged results
   */
-  async invokeForAllApps(configuredUrl: string, requestParameters: any, rootElement: string) {
+  async invokeForAllApps(configuredUrl: string, requestParameters: any, rootElement?: string) {
     if (!this.orgName || this.orgName.length === 0) {
       throw new Error(
         'The "Organization name" has to be configured on datasource settings. Available options can be checked the listOrgs query.'
@@ -483,7 +512,8 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
       const promise = this.doRequest(url, requestParameters).then((response) => {
         //Set app name to data
-        response.data[rootElement].map((element: any) => {
+        const data = !!rootElement ? response.data[rootElement] : response.data;
+        data.map((element: any) => {
           if (typeof element === 'object') {
             element['appName'] = appName;
           }
@@ -501,7 +531,8 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           //Merge results of all apps
           let result: any = [];
           for (let index = 0; index < data.length; index++) {
-            result = result.concat(...data[index][rootElement]);
+            const dataSeries = !!rootElement ? data[index][rootElement] : data[index];
+            result = result.concat(...dataSeries);
           }
 
           return result;
