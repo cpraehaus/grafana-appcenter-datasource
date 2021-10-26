@@ -157,7 +157,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     }
 
     // Get ErrorGroupIds for the entire period.
-    await this.invokeForAllApps(url, params, 'errorGroups').then((errorGroups) => {
+    await this.invokeForAllApps(url, params, 'errorGroups', query).then((errorGroups) => {
       // Add version to results
       result[errorGroups.appVersion] = [];
 
@@ -286,7 +286,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       top: query.limit,
     };
 
-    return await this.invokeForAllApps(url, params, 'errorGroups').then((data) => {
+    return await this.invokeForAllApps(url, params, 'errorGroups', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -332,7 +332,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       end: this.end.toISOString(),
     };
 
-    return await this.invokeForAllApps(url, params, 'errors').then((data) => {
+    return await this.invokeForAllApps(url, params, 'errors', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -374,7 +374,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       top: query.limit,
     };
 
-    return await this.invokeForAllApps(url, params, 'events').then((data) => {
+    return await this.invokeForAllApps(url, params, 'events', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -411,7 +411,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     const eventName = this.getVariable('eventName');
     const url = `${this.baseUrl}` + `/v0.1/apps/{owner_name}/{app_name}/analytics/events/${eventName}/properties`;
 
-    return await this.invokeForAllApps(url, {}, 'event_properties').then((data) => {
+    return await this.invokeForAllApps(url, {}, 'event_properties', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [{ name: 'Name', type: FieldType.string }],
@@ -436,7 +436,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       end: this.end.toISOString(),
     };
 
-    return await this.invokeForAllApps(url, params, 'values').then((data) => {
+    return await this.invokeForAllApps(url, params, 'values', query).then((data) => {
       const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
@@ -462,23 +462,36 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   /*
     Invokes an API for all apps configured and returns an list with merged results
   */
-  async invokeForAllApps(configuredUrl: string, requestParameters: any, rootElement: string) {
+  async invokeForAllApps(configuredUrl: string, requestParameters: any, rootElement: string, query?: MyQuery) {
     if (!this.orgName || this.orgName.length === 0) {
       throw new Error(
         'The "Organization name" has to be configured on datasource settings. Available options can be checked the listOrgs query.'
       );
     }
 
-    if (!this.appName || this.appName.length === 0) {
+    const appName = query?.appName ?? this.appName;
+
+    if (!appName || appName.length === 0) {
       throw new Error(
-        'The "App name" has to be configured on datasource settings. Available options can be checked the listApps query.'
+        'The "App name" has to be configured on query or datasource settings. Available options can be checked the listApps query.'
       );
+    }
+
+    // Apply common filters to request params based on query
+    if (!!query) {
+      requestParameters = requestParameters ?? {};
+      if (!!query.appVersion) {
+        requestParameters['version'] = query.appVersion;
+      }
+      if (!!query.groupState) {
+        requestParameters['groupState'] = query.groupState;
+      }
     }
 
     var result: Array<Promise<any>> = [];
 
     // Executes ws for all apps and stores promises into result
-    this.appName.split(';').forEach(async (appName) => {
+    appName.split(';').forEach(async (appName) => {
       const url = configuredUrl.replace('{owner_name}', this.orgName).replace('{app_name}', appName);
 
       const promise = this.doRequest(url, requestParameters).then((response) => {

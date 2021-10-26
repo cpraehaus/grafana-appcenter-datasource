@@ -11,9 +11,17 @@ export const TYPES = [
   'Event property count',
 ];
 
+/**
+ * Query model.
+ *
+ * Contains parameters for the query.
+ */
 export interface MyQuery extends DataQuery {
   type: SelectableValue;
   limit?: number;
+  appName?: string;
+  appVersion?: string;
+  groupState?: GroupState;
 }
 
 export const defaultQuery: Partial<MyQuery> = {
@@ -37,3 +45,5 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
 export interface MySecureJsonData {
   apiKey?: string;
 }
+
+export type GroupState = 'open' | 'closed' | 'ignored';
