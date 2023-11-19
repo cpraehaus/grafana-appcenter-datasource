@@ -307,6 +307,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           { name: 'State', type: FieldType.string },
           { name: 'First Occurrence', type: FieldType.time },
           { name: 'Last Occurrence', type: FieldType.time },
+          { name: 'Comment', type: FieldType.string },
         ],
       });
 
@@ -324,6 +325,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
           object.state,
           object.firstOccurrence,
           object.lastOccurrence,
+          object.annotation,
         ]);
       });
 
